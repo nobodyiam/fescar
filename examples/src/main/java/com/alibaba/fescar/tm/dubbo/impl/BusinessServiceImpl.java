@@ -16,12 +16,18 @@
 
 package com.alibaba.fescar.tm.dubbo.impl;
 
+import static jodd.util.ReflectUtil.invoke;
+
 import com.alibaba.fescar.core.context.RootContext;
 import com.alibaba.fescar.spring.annotation.GlobalTransactional;
 import com.alibaba.fescar.tm.dubbo.BusinessService;
 import com.alibaba.fescar.tm.dubbo.OrderService;
 import com.alibaba.fescar.tm.dubbo.StorageService;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -49,13 +55,24 @@ public class BusinessServiceImpl implements BusinessService {
         this.orderService = orderService;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext(
             new String[] {"dubbo-business.xml"});
         final BusinessService business = (BusinessService)context.getBean("business");
 
-        LOGGER.info("Main business begin ... xid: " + RootContext.getXID());
-        business.purchase("U100001", "C00321", 2);
-        LOGGER.info("Main business end ... xid: " + RootContext.getXID());
+
+        while (true) {
+            System.out.print("> ");
+            String input = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8)).readLine();
+            if (input == null || input.length() == 0) {
+                continue;
+            }
+            if (input.equalsIgnoreCase("quit")) {
+                System.exit(0);
+            }
+            LOGGER.info("Main business begin ... xid: " + RootContext.getXID());
+            business.purchase("U100001", "C00321", 2);
+            LOGGER.info("Main business end ... xid: " + RootContext.getXID());
+        }
     }
 }
